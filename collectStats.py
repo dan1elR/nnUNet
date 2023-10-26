@@ -2,9 +2,13 @@ import os
 import glob
 import pandas as pd
 import json
+from get95HD import get95HD, labelDir, isotropic
 
-dir =   '/home/daniel/ResearchData/Prostate/nnUnet/nnUNet_results/Dataset006_prostateCTV/nnUNetTrainer_100epochs__nnUNetPlans__2d/'
-columnNames = ['Dice','FN','FP','IoU','TN','TP','n_pred','n_ref']#,
+DatasetID = '009'
+resolution = '2d'
+dir =   f'/home/daniel/ResearchData/Prostate/nnUnet/nnUNet_results/Dataset{DatasetID}_prostateCTV/nnUNetTrainer_100epochs__nnUNetPlans__{resolution}/'
+labelDir = labelDir.replace('005', DatasetID)
+columnNames = ['Dice','FN','FP','IoU','TN','TP','n_pred','n_ref', 'HD', 'HD95']#,
 #               'Current_lr','train_loss','val_loss','Pseudo Dice','EMA pseudo Dice','epoch']
 #df = pd.DataFrame({'Fold': firstColumn})
 
@@ -29,8 +33,34 @@ for fold in [0,1,2,3,4]:
     json_data = []  # your list with json objects (dicts)
     with open(valJson) as json_file:
         json_data = json.load(json_file)
-    valStats = list(json_data['foreground_mean'].values())
+    valStats = list(json_data['mean']['1'].values())
     # valStats.extend([lrAtBest, trainLoss, valLoss, pseudoDice, bestEMA, bestEpoch])
+    if not os.path.isfile(os.path.join(foldDIR, 'validation', 'Hausdorff.xlsx')):
+        print('computing Hausdorffs')
+        valDir = os.path.join(foldDIR, 'validation')
+        print('fold: ', fold)
+        files = glob.glob(valDir + '/*.nii.gz')
+        IDS = []
+        for file in files:
+            id = os.path.basename(file)
+            IDS.append(id)
+
+        hDorfs = []
+        for id in IDS:
+            hausDorf = get95HD(valDir, labelDir, id)
+            hDorfs.append(hausDorf)
+
+        df = pd.DataFrame(hDorfs, columns=['TUM-ID', 'Hausdorff', '95HD'])
+        df.set_index('TUM-ID', inplace=True)
+        mean = df.mean()
+        std = df.std()
+        df = df.T
+        df['Mean'] = mean
+        df['std'] = std
+        print(df.Mean)
+        df.to_excel(os.path.join(valDir, 'Hausdorff.xlsx'))
+    hausDF = pd.read_excel(os.path.join(foldDIR, 'validation', 'Hausdorff.xlsx'), index_col= 0)
+    valStats.extend(list(hausDF.Mean.values))
     stats.append(valStats)
 
 df = pd.DataFrame(stats, columns=columnNames)
