@@ -10,12 +10,12 @@ from scipy.spatial.distance import directed_hausdorff
 import scipy.spatial
 
 
-DatasetID = '009'
-dir =   f'/home/daniel/ResearchData/Prostate/nnUnet/nnUNet_results/Dataset{DatasetID}_prostateCTV/output_pp/'
+DatasetID = '010'
+dir =   f'/home/daniel/ResearchData/Prostate/nnUnet/nnUNet_results/Dataset{DatasetID}_PerytonCTV/output_pp/'
 files = glob.glob(dir+'*.nii.gz')
 #columnNames = ['Dice','FN','FP','IoU','TN','TP','n_pred','n_ref', 'HD', 'HD95']#,
 #               'Current_lr','train_loss','val_loss','Pseudo Dice','EMA pseudo Dice','epoch']
-labelDir = '/home/daniel/ResearchData/Prostate/nnUnet/nnUNet_raw/Dataset008_prostateCTV/labelsTr/'
+labelDir = '/home/daniel/ResearchData/Prostate/nnUnet/nnUNet_raw/Dataset010_PerytonCTV/imagesTS/labels/'
 hDorfs = []
 h95Dorfs = []
 Dices = []
